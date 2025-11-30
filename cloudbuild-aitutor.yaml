@@ -1,0 +1,40 @@
+steps:
+  # Build backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        "build",
+        "-t",
+        "europe-west3-docker.pkg.dev/$PROJECT_ID/stemtutorai/aitutor-service:$SHORT_SHA",
+        "-f",
+        "aitutor/Dockerfile",
+        "aitutor"
+      ]
+
+  # Push backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        "push",
+        "europe-west3-docker.pkg.dev/$PROJECT_ID/stemtutorai/aitutor-service:$SHORT_SHA"
+      ]
+
+  # Deploy backend
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
+    args:
+      [
+        "run",
+        "deploy",
+        "aitutor-service",
+        "--image",
+        "europe-west3-docker.pkg.dev/$PROJECT_ID/stemtutorai/aitutor-service:$SHORT_SHA",
+        "--region",
+        "europe-west3",
+        "--platform",
+        "managed",
+        "--allow-unauthenticated"
+      ]
+
+images:
+  - "europe-west3-docker.pkg.dev/$PROJECT_ID/stemtutorai/aitutor-service:$SHORT_SHA"
