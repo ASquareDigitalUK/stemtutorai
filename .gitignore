@@ -1,0 +1,35 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.pkl
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Environment files
+.env
+.env.*
+
+# Jupyter / Kaggle leftovers
+.ipynb_checkpoints/
+*.ipynb
+/kaggle/
+*.ipynb
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build / packaging
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
