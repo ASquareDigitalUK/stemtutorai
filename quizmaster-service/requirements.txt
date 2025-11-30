@@ -1,0 +1,13 @@
+# Google AI/ML and Cloud Libraries
+# Pinned to ensure the exact versions that work with the agent kit
+a2a-sdk==0.3.10
+google-adk==1.18.0
+google-genai==1.48.0
+
+# Core Web Framework Stack (Pinned for conflict resolution and stability)
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+
+# Utilities
+requests==2.32.5
+python-dotenv==1.2.1
