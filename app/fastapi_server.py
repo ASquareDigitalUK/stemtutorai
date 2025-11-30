@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from app.agent_runtime import runner, memory
 from app.classifier_agent_runtime import classifier_runner
 from app.intent_classifier_agent import intent_classifier_runner
-from app.quizmaster_server import quizmaster_a2a_app
+#from app.quizmaster_server import quizmaster_a2a_app
 from app.logging_plugin import logging_plugin
 from app.quizmaster_tool import (
     is_quiz_active,
@@ -23,10 +23,10 @@ DEBUG_ENABLED = os.getenv("ADK_DEBUG", "1") == "1"
 app = FastAPI()
 
 # Mount the Quizmaster A2A app under /quizmaster
-app.mount("/quizmaster", quizmaster_a2a_app)
+#app.mount("/quizmaster", quizmaster_a2a_app)
 
 if DEBUG_ENABLED:
-    print("✅ Quizmaster A2A mounted at /quizmaster")
+    print("Using REMOTE Quizmaster service. No local mount")
 
 
 # ----------------------------------------------------

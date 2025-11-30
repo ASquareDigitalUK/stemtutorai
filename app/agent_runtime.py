@@ -16,9 +16,12 @@ import os
 
 DEBUG_ENABLED = os.getenv("ADK_DEBUG", "1") == "1"
 
-# ---------- CLOUD RUN SAFE BASE URL ----------
-SERVICE_URL = os.getenv("SERVICE_URL", "http://localhost:8080")
-QUIZMASTER_AGENT_CARD_URL = f"{SERVICE_URL}/quizmaster{AGENT_CARD_WELL_KNOWN_PATH}"
+QUIZMASTER_BASE_URL = os.getenv(
+    "QUIZMASTER_URL",
+    "https://quizmaster-service-755245699668.europe-west3.run.app"
+)
+
+QUIZMASTER_AGENT_CARD_URL = f"{QUIZMASTER_BASE_URL}{AGENT_CARD_WELL_KNOWN_PATH}"
 
 retry_config = types.HttpRetryOptions(attempts=3, initial_delay=1)
 memory = PersistentMemory()
