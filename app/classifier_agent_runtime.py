@@ -2,6 +2,7 @@ from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.apps import App
 from google.adk.runners import Runner, InMemorySessionService
+from google.adk.apps.app import App, EventsCompactionConfig
 from app.logging_plugin import logging_plugin
 
 # ----------------------------
@@ -29,6 +30,10 @@ You MUST output ONLY a valid JSON object. Do NOT wrap the JSON in backticks.
 classifier_app = App(
     name="classifier_app",
     root_agent=classifier_agent,
+    events_compaction_config=EventsCompactionConfig(
+    compaction_interval=5,  # Trigger compaction every 5 invocations
+    overlap_size=1,  # Keep 1 previous turn for context
+    ),
     plugins=[logging_plugin],  #Add the plugin. Handles standard Observability logging across ALL agents
 )
 
