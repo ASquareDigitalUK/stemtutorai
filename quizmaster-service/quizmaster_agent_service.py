@@ -1,11 +1,9 @@
 # quizmaster_server.py
 """
-Quizmaster Service
-------------------
-This module exposes the QuizmasterAgent as an A2A agent using the ADK adapter.
-fastapi_server.py mounts this under /quizmaster.
-
-All logic, tools, state, question loading remain unchanged.
+Secure, production-ready version of quizmaster_server.py
+- Uses config.py for environment variables
+- Does NOT load secrets or URLs from code
+- Does NOT commit any .env files
 """
 
 import os
@@ -15,7 +13,6 @@ import requests
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
 
-from fastapi import FastAPI
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
@@ -25,12 +22,14 @@ from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from google.genai import types
 from google import genai
 
+# Load secure settings
+from config import settings
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 _genai_client = genai.Client()
 retry_config = types.HttpRetryOptions(attempts=3, initial_delay=1)
-
 
 # -----------------------------------------------------------
 # QUIZ STATE
@@ -47,42 +46,35 @@ class QuizState:
     score: int = 0
     questions_list: List[Dict[str, Any]] = field(default_factory=list)
 
-
 quiz_state = QuizState()
 
-
-QUESTION_DATA_URL_KEY = "QUIZ_DATA_GITHUB_URL"
-DEFAULT_QUESTION_URL = (
-    "https://raw.githubusercontent.com/vishukulkarni/Questions/main/questions_enriched.json"
-)
-
-
 def _load_static_questions():
+    """Loads questions from external URL defined by environment variable."""
     try:
-        res = requests.get(os.getenv(QUESTION_DATA_URL_KEY, DEFAULT_QUESTION_URL), timeout=10)
+        res = requests.get(settings.QUESTION_DATA_URL, timeout=10)
         res.raise_for_status()
         return res.json()
     except Exception as e:
         logger.error(f"❌ Failed to load quiz data: {e}")
         return []
 
-
-ALL_STATIC_QUESTIONS = _load_static_questions()
-
+ALL_STATIC_QUESTIONS = []
 
 # -----------------------------------------------------------
 # TOOLS
 # -----------------------------------------------------------
 
 def web_search(topic: str, max_snippets: int = 3) -> str:
-    api_key = os.getenv("GOOGLE_CSE_API_KEY")
-    cse_id = os.getenv("GOOGLE_CSE_ID")
+    api_key = settings.CSE_API_KEY
+    cse_id = settings.CSE_ID
+
     if not api_key or not cse_id:
         return f"(Search disabled — general knowledge only for '{topic}')."
+
     try:
         url = (
-            "https://www.googleapis.com/customsearch/v1"
-            f"?key={api_key}&cx={cse_id}&q={topic}"
+        "https://www.googleapis.com/customsearch/v1"
+        f"?key={api_key}&cx={cse_id}&q={topic}"
         )
         res = requests.get(url, timeout=8)
         res.raise_for_status()
@@ -91,7 +83,6 @@ def web_search(topic: str, max_snippets: int = 3) -> str:
         return "\n".join(snippets) or "(No search snippets available.)"
     except Exception as e:
         return f"(Search error: {e})"
-
 
 def _format_mcq(index, qdata):
     opts = qdata["options"]
@@ -103,7 +94,6 @@ def _format_mcq(index, qdata):
         f"D) {opts['D']}"
     )
 
-
 def _normalize_question(raw_q):
     raw_opts = [str(x) for x in raw_q.get("options", [])[:4]]
     options = {chr(65 + i): val for i, val in enumerate(raw_opts)}
@@ -112,12 +102,10 @@ def _normalize_question(raw_q):
         return {"question": raw_q["question"], "options": options, "correct_option": correct}
     return {"question": raw_q["question"], "options": options, "correct_option": None}
 
-
 def _get_available_data(questions):
     subjects = {q.get("subject", "").lower() for q in questions if q.get("subject")}
     topics = {q.get("topic", "").lower() for q in questions if q.get("topic")}
     return {"subjects": subjects, "topics": topics}
-
 
 def start_quiz(topic: str, difficulty: str = "easy", num_questions: int = 5) -> str:
     global quiz_state
@@ -132,9 +120,7 @@ def start_quiz(topic: str, difficulty: str = "easy", num_questions: int = 5) -> 
     is_subject_only = clean_input in available_data["subjects"]
 
     if is_subject_only:
-        questions_to_filter = [
-            q for q in ALL_STATIC_QUESTIONS if q.get("subject", "").lower() == clean_input
-        ]
+        questions_to_filter = [q for q in ALL_STATIC_QUESTIONS if q.get("subject", "").lower() == clean_input]
 
     search_context = web_search(topic)
 
@@ -171,10 +157,7 @@ def start_quiz(topic: str, difficulty: str = "easy", num_questions: int = 5) -> 
 
     except Exception:
         if clean_input and not is_subject_only:
-            topic_match_questions = [
-                q for q in ALL_STATIC_QUESTIONS
-                if clean_input in q.get("topic", "").lower()
-            ]
+            topic_match_questions = [q for q in ALL_STATIC_QUESTIONS if clean_input in q.get("topic", "").lower()]
             if topic_match_questions:
                 filtered_questions = topic_match_questions[:num_questions]
             else:
@@ -187,10 +170,7 @@ def start_quiz(topic: str, difficulty: str = "easy", num_questions: int = 5) -> 
             filtered_questions = questions_to_filter[:num_questions]
         else:
             import random
-            filtered_questions = random.sample(
-                ALL_STATIC_QUESTIONS,
-                min(num_questions, len(ALL_STATIC_QUESTIONS))
-            )
+            filtered_questions = random.sample(ALL_STATIC_QUESTIONS, min(num_questions, len(ALL_STATIC_QUESTIONS)))
 
     all_normalized_questions = [_normalize_question(q) for q in filtered_questions]
     normalized_questions = [q for q in all_normalized_questions if q["correct_option"]]
@@ -208,7 +188,7 @@ def start_quiz(topic: str, difficulty: str = "easy", num_questions: int = 5) -> 
         current_index=1,
         current_correct_option=qdata["correct_option"],
         score=0,
-        questions_list=normalized_questions
+        questions_list=normalized_questions,
     )
 
     intro = (
@@ -217,7 +197,6 @@ def start_quiz(topic: str, difficulty: str = "easy", num_questions: int = 5) -> 
     )
 
     return intro + _format_mcq(1, qdata)
-
 
 def answer_question(user_answer: str) -> str:
     global quiz_state
@@ -239,10 +218,7 @@ def answer_question(user_answer: str) -> str:
 
     if quiz_state.current_index >= quiz_state.total_questions:
         quiz_state.active = False
-        return (
-            feedback
-            + f"\n\n🎉 Quiz completed! Score: {quiz_state.score}/{quiz_state.total_questions}."
-        )
+        return feedback + f"\n\n🎉 Quiz completed! Score: {quiz_state.score}/{quiz_state.total_questions}."
 
     quiz_state.current_index += 1
     next_question_index = quiz_state.current_index - 1
@@ -252,38 +228,102 @@ def answer_question(user_answer: str) -> str:
 
     return feedback + "\n\n" + _format_mcq(quiz_state.current_index, qdata)
 
-
 # -----------------------------------------------------------
 # QUIZMASTER AGENT
 # -----------------------------------------------------------
 
 quizmaster_agent = LlmAgent(
-    model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
+    model=Gemini(model=settings.QUIZMASTER_MODEL, retry_options=retry_config),
     name="QuizmasterAgent",
     description="Stateful MCQ quiz engine with Google Search grounding.",
     instruction="Use tools. Never speak directly.",
     tools=[web_search, start_quiz, answer_question],
 )
 
-QUIZMASTER_PORT = int(os.getenv("PORT", "8080"))
+QUIZMASTER_PORT = settings.QUIZMASTER_PORT
 
-quizmaster_a2a_app = to_a2a(
-    quizmaster_agent,
-    port=QUIZMASTER_PORT,
-)
+quizmaster_a2a_app = to_a2a(quizmaster_agent, port=QUIZMASTER_PORT)
 
 # -----------------------------------------------------------
-# EXTRA ROUTES
+# EXTRA ROUTES (STARLETTE STYLE)
 # -----------------------------------------------------------
 
-def quiz_state_endpoint(request):
+TEST_TOKEN = settings.TEST_TOKEN
+
+# ----- QUIZ STATE ENDPOINT -----
+async def quiz_state_endpoint(request):
     return JSONResponse({"active": quiz_state.active})
 
 quizmaster_a2a_app.router.routes.append(
     Route("/quiz_state", endpoint=quiz_state_endpoint, methods=["GET"])
 )
 
-print(f"✅ Quizmaster A2A app ready on port {QUIZMASTER_PORT}")
+# ----- RUN TEST ENDPOINT -----
+async def run_test_endpoint(request):
+    # Read query parameters
+    token = request.query_params.get("token")
+    difficulty = request.query_params.get("difficulty")
+    num_questions = request.query_params.get("num_questions")
+    subject = request.query_params.get("subject")
+    topic = request.query_params.get("topic")
+
+    # ---- SECURITY CHECK ----
+    if token != TEST_TOKEN:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    # ---- REQUIRED PARAMETERS ----
+    if not difficulty:
+        return JSONResponse({"error": "Missing required parameter: difficulty"}, status_code=400)
+
+    if not num_questions:
+        return JSONResponse({"error": "Missing required parameter: num_questions"}, status_code=400)
+
+    try:
+        num_questions = int(num_questions)
+    except:
+        return JSONResponse({"error": "num_questions must be an integer"}, status_code=400)
+
+    # Require subject OR topic
+    if not subject and not topic:
+        return JSONResponse(
+            {"error": "You must provide at least 'subject' or 'topic'."},
+            status_code=400,
+        )
+
+    chosen_topic = topic if topic else subject
+
+    # Question count
+    question_count = len(ALL_STATIC_QUESTIONS)
+
+    # Try generating quiz
+    try:
+        quiz_output = start_quiz(chosen_topic, difficulty, num_questions)
+        quiz_ok = True
+    except Exception as e:
+        quiz_output = f"Error generating quiz: {e}"
+        quiz_ok = False
+
+    return JSONResponse({
+        "status": "ok" if quiz_ok else "error",
+        "questions_loaded": question_count,
+        "subject_used": subject,
+        "topic_used": topic,
+        "difficulty_used": difficulty,
+        "num_questions_used": num_questions,
+        "quiz_generation_success": quiz_ok,
+        "sample_quiz_output": quiz_output,
+    })
+
+# Register /run_test GET route
+quizmaster_a2a_app.router.routes.append(
+    Route("/run_test", endpoint=run_test_endpoint, methods=["GET"])
+)
+
+# -----------------------------------------------------------
+# LOAD QUESTIONS BEFORE STARTUP
+# -----------------------------------------------------------
+ALL_STATIC_QUESTIONS = _load_static_questions()
+logger.info(f"✅ Loaded {len(ALL_STATIC_QUESTIONS)} static questions on startup")
 
 # REQUIRED for Uvicorn
 app = quizmaster_a2a_app

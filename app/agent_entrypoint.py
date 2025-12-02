@@ -1,33 +1,69 @@
-import os
 import json
-
 from fastapi import FastAPI
 from pydantic import BaseModel
-
-from app.agent_runtime import runner, memory
-from app.classifier_agent_runtime import classifier_runner
+from config import settings
+from app.tutor_agent_service import runner, memory
+from app.subject_classifier_agent import classifier_runner
 from app.intent_classifier_agent import intent_classifier_runner
 #from app.quizmaster_server import quizmaster_a2a_app
 from app.logging_plugin import logging_plugin
-from app.quizmaster_tool import (
+from app.quizmaster_tools import (
     is_quiz_active,
     get_supported_subjects,
     get_topic_examples,
 )
 
 # ----------------------------------------------------
+# UserID normalization
+# ----------------------------------------------------
+def normalize_uid(uid: str) -> str:
+    """
+    Make user_id safe for Firestore.
+    Keeps full name but replaces spaces and illegal characters.
+    """
+    uid = uid.strip().lower()
+    # Replace spaces with underscores
+    uid = uid.replace(" ", "_")
+    # Optional: remove or replace other illegal chars
+    return uid
+
+def format_display_name(raw: str) -> str:
+    """
+    Convert safe Firestore IDs into pretty human names.
+    Examples:
+      'john_may'     -> 'John May'
+      'JANE-DOE'     -> 'Jane Doe'
+      ' john  smith ' -> 'John Smith'
+    """
+    if not raw:
+        return "Student"
+
+    pretty = raw.replace("_", " ").replace("-", " ").strip()
+    # Collapse repeated spaces
+    pretty = " ".join(pretty.split())
+    return pretty.title()
+
+# ----------------------------------------------------
 # Global config
 # ----------------------------------------------------
-DEBUG_ENABLED = os.getenv("ADK_DEBUG", "1") == "1"
+DEBUG_ENABLED = settings.ADK_DEBUG
+# Guidance block shown after the greeting
+capability_guidance = """
+Here are a few fun things you can ask me:
 
+• **“Tell me about Pythagoras’ theorem.”**  
+• **“What’s the latest news on semiconductors?”**  
+• **“Help me understand this question…”**  
+• **“Hit me up with a quiz!”**  
+
+Just say the word — I’ve got my thinking cap ready! 🎩📚
+"""
 app = FastAPI()
-
 # Mount the Quizmaster A2A app under /quizmaster
 #app.mount("/quizmaster", quizmaster_a2a_app)
 
 if DEBUG_ENABLED:
     print("Using REMOTE Quizmaster service. No local mount")
-
 
 # ----------------------------------------------------
 # Request model
@@ -36,6 +72,25 @@ class Query(BaseModel):
     user_id: str
     message: str
 
+async def generate_academic_joke():
+    """
+    Uses the TutorAgent LLM to create a single, clean academic joke.
+    Must be short, family-friendly, and school-themed.
+    """
+    joke_prompt = """
+Generate a single, short, family-friendly academic joke.
+It must involve math, science, school life, or learning.
+Keep it to one sentence. Do NOT add explanations.
+"""
+    events = await runner.run_debug(joke_prompt, session_id="__joke__")
+    joke = extract_final_reply(events).strip()
+
+    # Safety fallback if LLM somehow produces nothing
+    if not joke:
+        return "Why was the equal sign so humble? It wasn’t less than or greater than anyone else."
+
+    # Ensure it's one line, not multiple sentences
+    return joke.split("\n")[0].strip()
 
 # ----------------------------------------------------
 # Utility: Extract reply text from ADK events
@@ -150,23 +205,44 @@ def classify_subject_and_topic(msg: str):
 # ----------------------------------------------------
 @app.post("/welcome")
 async def welcome_endpoint(query: Query):
-    uid = (query.user_id or "").strip() or "anonymous"
+    raw_uid = (query.user_id or "").strip() or "anonymous"
+    # Normalized key stored in memory/Firestore
+    uid = normalize_uid(raw_uid)
+
+    # Pretty name for greeting / LLM prompt
+    display_name = format_display_name(raw_uid or uid)
 
     state = memory.dump_user_state(uid)
     short_msgs = state.get("short_term_messages", [])
     is_new = len(short_msgs) == 0
 
+    academic_joke = await generate_academic_joke()
+
     if is_new:
         stitched = f"""
-You are an AI Tutor greeting a NEW student named {uid}.
-Generate a warm, encouraging welcome message (1–2 sentences).
+You are an AI Tutor greeting a NEW student named {display_name}.
+
+Write a warm, friendly, encouraging WELCOME message (1–2 sentences).
+Then include exactly ONE light academic joke:
+"{academic_joke}"
+
+Finally, offer a brief, funny guidance section showing what the student can ask:
+{capability_guidance}
 """
     else:
         summary = memory.summarize_short_term(uid)
         stitched = f"""
-You are an AI Tutor greeting a RETURNING student named {uid}.
-Here is a summary of your recent interactions with them:\n{summary}
-Generate a short, friendly WELCOME BACK message (1–2 sentences).
+You are an AI Tutor greeting a RETURNING student named {display_name}.
+
+Here is a summary of recent interactions:
+{summary}
+
+Write a short, cheerful “Welcome back!” message (1–2 sentences).
+Then include exactly ONE light academic joke:
+"{academic_joke}"
+
+Finally, offer a brief, funny guidance section showing what the student can ask:
+{capability_guidance}
 """
 
     events = await runner.run_debug(stitched, session_id=uid)
@@ -175,13 +251,13 @@ Generate a short, friendly WELCOME BACK message (1–2 sentences).
     memory.append_message(uid, "assistant", reply)
     return {"welcome": reply}
 
-
 # ----------------------------------------------------
 # /tutor endpoint
 # ----------------------------------------------------
 @app.post("/tutor")
 async def tutor_endpoint(query: Query):
-    uid = (query.user_id or "").strip() or "anonymous"
+    raw_uid = (query.user_id or "").strip() or "anonymous"
+    uid = normalize_uid(raw_uid)
     msg = (query.message or "").strip()
 
     if not msg:

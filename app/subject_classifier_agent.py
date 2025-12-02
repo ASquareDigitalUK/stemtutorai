@@ -2,15 +2,18 @@ from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.apps import App
 from google.adk.runners import Runner, InMemorySessionService
-from google.adk.apps.app import App, EventsCompactionConfig
+from google.adk.apps.app import EventsCompactionConfig
+
 from app.logging_plugin import logging_plugin
+from config import settings
+
 
 # ----------------------------
 # CLASSIFIER AGENT
 # ----------------------------
 classifier_agent = Agent(
     name="SubjectClassifier",
-    model=Gemini(model="gemini-2.5-flash"),
+    model=Gemini(model=settings.SUBJECT_CLASSIFIER_MODEL),
     instruction="""
 You are a Subject Classification Agent.
 
@@ -21,25 +24,32 @@ Your job is to read a student's question and classify it into:
 
 Keep the topic broad and general — NOT overly specific.
 
-You MUST output ONLY a valid JSON object. Do NOT wrap the JSON in backticks.
+You MUST output ONLY a valid JSON object.
+Do NOT wrap the JSON in backticks.
 """,
-    output_key="classification"
+    output_key="classification",
 )
 
-# Wrap in an App + Runner
+# ----------------------------
+# APP
+# ----------------------------
 classifier_app = App(
     name="classifier_app",
     root_agent=classifier_agent,
     events_compaction_config=EventsCompactionConfig(
-    compaction_interval=5,  # Trigger compaction every 5 invocations
-    overlap_size=1,  # Keep 1 previous turn for context
+        compaction_interval=settings.SUBJECT_CLASSIFIER_COMPACTION_INTERVAL,
+        overlap_size=settings.SUBJECT_CLASSIFIER_OVERLAP_SIZE,
     ),
-    plugins=[logging_plugin],  #Add the plugin. Handles standard Observability logging across ALL agents
+    # Logging plugin enabled only if ADK_DEBUG = 1
+    plugins=[logging_plugin] if settings.ADK_DEBUG else [],
 )
 
+# ----------------------------
+# RUNNER
+# ----------------------------
 classifier_runner = Runner(
     app=classifier_app,
-    session_service=InMemorySessionService()
+    session_service=InMemorySessionService(),
 )
 
-print("📘 SubjectClassifier Agent & Runner initialized and saved.")
+print("📘 SubjectClassifier Agent & Runner initialized and ready.")
