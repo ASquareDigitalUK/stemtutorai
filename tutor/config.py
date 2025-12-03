@@ -11,7 +11,7 @@ class TutorSettings(BaseSettings):
     CSE_ID: str
 
     # URLs
-    QUIZMASTER_URL: str
+    QUIZMASTER_URL: str = "https://quizmaster-service-hrzbcuuvla-ew.a.run.app"
     TUTOR_URL: str | None = None
 
     # Ports (local dev only)
@@ -40,7 +40,7 @@ class TutorSettings(BaseSettings):
     ADK_DEBUG: int = 1
 
     class Config:
-        env_file = ".env.prod"
+        #env_file = ".env.prod"
         extra = "ignore"
 
 
