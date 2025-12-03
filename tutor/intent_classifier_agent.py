@@ -2,11 +2,17 @@ from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.apps import App
 from google.adk.runners import Runner, InMemorySessionService
-from app.logging_plugin import logging_plugin
+from google.adk.apps.app import EventsCompactionConfig
 
+from tutor.logging_plugin import logging_plugin
+from tutor.config import settings
+
+# ----------------------------
+# INTENT CLASSIFIER AGENT
+# ----------------------------
 intent_classifier_agent = Agent(
     name="IntentClassifierAgent",
-    model=Gemini(model="gemini-2.5-flash"),
+    model=Gemini(model=settings.INTENT_CLASSIFIER_MODEL),
     instruction="""
 You are an Intent Classification Agent.
 
@@ -49,15 +55,26 @@ The confidence score is between 0 and 1.
     output_key="intent_data"
 )
 
+# ----------------------------
+# APP
+# ----------------------------
 intent_classifier_app = App(
     name="intent_classifier_app",
     root_agent=intent_classifier_agent,
-    plugins=[logging_plugin] if logging_plugin else [],
+    plugins=[logging_plugin] if settings.ADK_DEBUG else [],
+    #events_compaction_config=EventsCompactionConfig(
+    #    compaction_interval=settings.INTENT_CLASSIFIER_COMPACTION_INTERVAL,
+    #    overlap_size=settings.INTENT_CLASSIFIER_OVERLAP_SIZE,
+    #),
 )
 
+
+# ----------------------------
+# RUNNER
+# ----------------------------
 intent_classifier_runner = Runner(
     app=intent_classifier_app,
-    session_service=InMemorySessionService()
+    session_service=InMemorySessionService(),
 )
 
 print("🧭 IntentClassifierAgent initialized successfully.")

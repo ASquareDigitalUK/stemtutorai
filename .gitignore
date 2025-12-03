@@ -1,35 +1,78 @@
-# Python cache
+# =========================
+# PYTHON CACHE
+# =========================
 __pycache__/
 *.pyc
 *.pyd
 *.pyo
 *.pkl
 
-# Virtual environments
+# =========================
+# VIRTUAL ENVIRONMENTS
+# =========================
 .venv/
 env/
 venv/
+PENV/
 
-# Environment files
+# =========================
+# ENVIRONMENT FILES
+# NEVER COMMIT SECRETS
+# =========================
 .env
 .env.*
+*.env
+deploy*.sh
 
-# Jupyter / Kaggle leftovers
+# =========================
+# LOCAL SERVICE ACCOUNT KEYS
+# =========================
+# These must NEVER enter source control
+*serviceaccount*.json
+*service-account*.json
+firebase*.json
+firestore*.json
+*.credential.json
+
+# =========================
+# JUPYTER / KAGGLE
+# =========================
 .ipynb_checkpoints/
 *.ipynb
 /kaggle/
-*.ipynb
 
-# OS / Editor files
+# =========================
+# OS / EDITOR
+# =========================
 .DS_Store
+**/.DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# Build / packaging
+# =========================
+# BUILD / PACKAGING
+# =========================
 dist/
 build/
 *.egg-info/
 
-# Logs
+# =========================
+# LOGS
+# =========================
 *.log
+
+# =========================
+# LOCAL DEV / RUNTIME FILES
+# =========================
+local_ports_cleanup.py
+main.py
+config_local.py
+
+# =========================
+# RUNTIME OUTPUT
+# =========================
+tmp/
+memory/
+tutor_memory/
+.cache/

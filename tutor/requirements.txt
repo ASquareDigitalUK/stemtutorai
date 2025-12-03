@@ -11,10 +11,3 @@ google-cloud-logging==3.12.1
 fastapi==0.116.1
 starlette==0.47.2
 uvicorn[standard]==0.35.0
-
-# Utilities
-# Pinned because Pydantic is a critical dependency for the web framework stack
-pydantic==2.11.3
-requests==2.32.5
-gradio==5.38.1
-python-dotenv==1.2.1
