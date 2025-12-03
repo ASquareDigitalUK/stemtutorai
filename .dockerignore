@@ -1,0 +1,12 @@
+# Python Environment and Cache
+PENV/
+__pycache__/
+*.pyc
+
+# Operating System Files
+.DS_Store
+
+# Development Files (only needed during development, not in the final container)
+*.log
+local_ports_cleanup.py
+config_local.py

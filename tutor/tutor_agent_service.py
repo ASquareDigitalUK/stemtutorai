@@ -8,11 +8,10 @@ from google.adk.agents.remote_a2a_agent import RemoteA2aAgent, AGENT_CARD_WELL_K
 from google.adk.tools.agent_tool import AgentTool
 from google.genai import types
 
-from app.logging_plugin import logging_plugin
-from app.persistent_memory import PersistentMemory
-from app.google_search_agent import google_search_agent
-
-from config import settings  # <-- central config
+from tutor.logging_plugin import logging_plugin
+from tutor.persistent_memory import PersistentMemory
+from tutor.google_search_agent import google_search_agent
+from tutor.config import settings  # <-- central config
 
 # ---------- CONFIG-DRIVEN SETTINGS ----------
 

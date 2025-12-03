@@ -5,8 +5,6 @@ Secure, production-ready version of quizmaster_server.py
 - Does NOT load secrets or URLs from code
 - Does NOT commit any .env files
 """
-
-import os
 import json
 import logging
 import requests
@@ -23,7 +21,7 @@ from google.genai import types
 from google import genai
 
 # Load secure settings
-from config import settings
+from quizmaster.config import settings
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

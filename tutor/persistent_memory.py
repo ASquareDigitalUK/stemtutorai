@@ -1,4 +1,4 @@
-from config import settings
+from tutor.config import settings
 import json
 import os
 import time

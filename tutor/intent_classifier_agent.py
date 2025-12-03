@@ -4,8 +4,8 @@ from google.adk.apps import App
 from google.adk.runners import Runner, InMemorySessionService
 from google.adk.apps.app import EventsCompactionConfig
 
-from app.logging_plugin import logging_plugin
-from config import settings
+from tutor.logging_plugin import logging_plugin
+from tutor.config import settings
 
 # ----------------------------
 # INTENT CLASSIFIER AGENT

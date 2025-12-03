@@ -22,6 +22,7 @@ PENV/
 .env
 .env.*
 *.env
+deploy*.sh
 
 # =========================
 # LOCAL SERVICE ACCOUNT KEYS
@@ -66,6 +67,7 @@ build/
 # =========================
 local_ports_cleanup.py
 main.py
+config_local.py
 
 # =========================
 # RUNTIME OUTPUT

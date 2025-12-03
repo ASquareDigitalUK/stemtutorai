@@ -1,21 +1,18 @@
+# UI Dockerfile
 FROM python:3.11-slim
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PORT=8080
 
-# Set working directory
 WORKDIR /app
 
-# Copy CURRENT DIRECTORY (frontend/) contents into container
-COPY . /app/frontend
+# Install Python dependencies
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Install Python packages
-RUN pip install --no-cache-dir -r /app/frontend/requirements.txt
+# Copy all UI code including static assets
+COPY . /app
 
-# Expose Gradio port
-EXPOSE 7860
-
-# Run the Gradio app
-CMD ["python", "/app/frontend/gradio_app.py"]
+# Run the UI — make sure UI uses the Cloud Run PORT
+CMD ["python", "ui_service.py"]

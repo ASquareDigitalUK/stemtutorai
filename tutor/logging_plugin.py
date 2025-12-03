@@ -1,8 +1,9 @@
 from google.adk.plugins.logging_plugin import LoggingPlugin
 import os
+from tutor.config import settings
 
 # Environment-based debug switch
-DEBUG_ENABLED = os.getenv("ADK_DEBUG", "1") == "1"
+DEBUG_ENABLED = settings.ADK_DEBUG
 
 # If debugging is enabled, load the ADK LoggingPlugin
 # If disabled, set to None so calling code can easily skip it

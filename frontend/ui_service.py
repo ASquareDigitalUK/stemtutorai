@@ -10,7 +10,6 @@ from config import settings
 
 # Pull from config.py, never from os directly
 BASE_URL = settings.TUTOR_URL.rstrip("/")
-TUTOR_PORT = settings.TUTOR_PORT  # int from config
 API_TUTOR_URL = f"{BASE_URL}/tutor"
 API_WELCOME_URL = f"{BASE_URL}/welcome"
 
@@ -120,7 +119,7 @@ with gr.Blocks(css=background_css) as demo:
     # LOGIN
     with gr.Column(visible=True, elem_id="login-box") as login_col:
         gr.Markdown("### Enter your name to begin")
-        name_input = gr.Textbox(label="Your Name", placeholder="e.g. John")
+        name_input = gr.Textbox(label="Your Name", placeholder="e.g. Fred Flinstone")
         login_btn = gr.Button("Login", variant="primary")
 
     # ---------- CHAT ----------
@@ -178,7 +177,9 @@ with gr.Blocks(css=background_css) as demo:
 
     # START UI
     if __name__ == "__main__":
+        port = int(os.environ.get("PORT", 7860))  # Cloud Run injects PORT=8080
+
         demo.launch(
-            server_name=settings.UI_URL,
-            server_port=int(settings.UI_PORT),
+            server_name="0.0.0.0",
+            server_port=port,
         )

@@ -1,13 +1,13 @@
 import json
 from fastapi import FastAPI
 from pydantic import BaseModel
-from config import settings
-from app.tutor_agent_service import runner, memory
-from app.subject_classifier_agent import classifier_runner
-from app.intent_classifier_agent import intent_classifier_runner
-#from app.quizmaster_server import quizmaster_a2a_app
-from app.logging_plugin import logging_plugin
-from app.quizmaster_tools import (
+from tutor.config import settings
+from tutor.tutor_agent_service import runner, memory
+from tutor.subject_classifier_agent import classifier_runner
+from tutor.intent_classifier_agent import intent_classifier_runner
+#from tutor.quizmaster_server import quizmaster_a2a_app
+from tutor.logging_plugin import logging_plugin
+from tutor.quizmaster_tools import (
     is_quiz_active,
     get_supported_subjects,
     get_topic_examples,
