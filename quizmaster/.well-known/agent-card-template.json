@@ -1,0 +1,21 @@
+{
+  "name": "quizmaster_agent",
+  "description": "Quiz generation and scoring service",
+  "version": "1.0",
+  "runtime": "python",
+  "endpoints": {
+    "base_url": "${QUIZMASTER_URL}"
+  },
+  "tools": {
+    "start_quiz": {
+      "path": "/start_quiz",
+      "description": "Start a quiz",
+      "method": "POST"
+    },
+    "submit_answer": {
+      "path": "/submit_answer",
+      "description": "Submit an answer",
+      "method": "POST"
+    }
+  }
+}

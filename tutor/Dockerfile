@@ -10,11 +10,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# requirements.txt is in the SAME folder as Dockerfile now
 COPY requirements.txt /app/requirements.txt
 
-# Copy the quizmaster service code (everything in this folder)
 COPY . /app/tutor
+
+# CRITICAL FIX — remove accidentally copied agent-card
+RUN rm -rf /app/tutor/.well-known
+
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 CMD ["sh", "-c", "uvicorn tutor.agent_entrypoint:app --host 0.0.0.0 --port ${PORT}"]

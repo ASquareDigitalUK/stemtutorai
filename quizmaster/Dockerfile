@@ -10,14 +10,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# requirements.txt is in the SAME folder as Dockerfile now
 COPY requirements.txt /app/requirements.txt
 
-# Copy the quizmaster service code (everything in this folder)
+# Copy only the code (NOT the .well-known agent-card.json)
 COPY . /app/quizmaster
+
+# Remove any static agent-card.json that was accidentally copied
+RUN rm -rf /app/quizmaster/.well-known/agent-card.json
+
+# Keep template
+COPY quizmaster/.well-known/agent-card-template.json /app/.well-known/agent-card-template.json
 
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 EXPOSE 8080
 
-CMD ["uvicorn", "quizmaster.quizmaster_agent_service:app", "--host", "0.0.0.0", "--port", "8080"]
+# Generate runtime agent-card.json (using Cloud Run ENV var)
+CMD ["sh", "-c", "\
+mkdir -p /app/.well-known && \
+envsubst < /app/.well-known/agent-card-template.json > /app/.well-known/agent-card.json && \
+uvicorn quizmaster.quizmaster_agent_service:app --host 0.0.0.0 --port 8080 \
+"]
