@@ -1,219 +1,221 @@
 # STEM Tutor AI
 
-**An AI-powered, multi-agent learning companion for personalised STEM education.**
+**An AI-powered, multi-agent tutoring system for personalised STEM
+education.**\
+STEM Tutor AI delivers adaptive explanations, intelligent quiz
+generation, real-time search-augmented reasoning, and persistent memory
+to support student learning across Science, Technology, Engineering, and
+Mathematics.
 
-STEM Tutor AI brings together intelligent tutoring, adaptive quiz generation, and smart reasoning to help students learn Maths & Science more effectively.
+------------------------------------------------------------------------
 
-## 🚀 **Overview**
+## 📚 Overview
 
-STEM Tutor AI is a multi-agent, stateful AI tutoring system designed to:
+The system now uses a **modular micro-services architecture** following
+a full code refactor.\
+Each service is isolated, independently deployable, and communicates via
+lightweight HTTP APIs.
 
-* Provide personalised explanations for STEM topics
-* Generate quizzes dynamically based on the learner’s level
-* Adapt to student performance over time
-* Integrate external tools such as Google Search & Quiz Generation database
-* Serve as a future-ready foundation for AI-augmented education platforms
+### Core Services
 
-This project is organised for extension, experimentation, and deployment in real-world STEM learning environments.
+-   **Tutor Service** -- Primary reasoning engine for teaching,
+    explanations, examples, intent detection, and student modelling.
+-   **QuizMaster Service** -- Generates adaptive quizzes, evaluates
+    difficulty, and analyses student performance.
+-   **Frontend UI Service** -- Lightweight user interface layer (can be
+    replaced or extended by mobile or web clients).
 
-## 🎯 Motivation
-### The Challenge
-STEM subjects often require **personalised, immediate feedback**, but many students lack access to private tutors.
-Online resources are generic, and teachers cannot individually adapt content for every learner.
-### The Opportunity
-Recent advancements in AI and agent-based architectures allow us to build **adaptive, conversational learning systems** capable of:
-* Assessing a student’s misunderstanding
-* Generating targeted practice material
-* Giving step-by-step explanations
-* Tracking learning progress
-* Self-evaluating teaching quality
+All services include their own `Dockerfile`, configuration, and
+dependency management.
 
-### The Vision
-STEM Tutor AI aims to become a **“Study Copilot”** — an intelligent assistant that helps students learn independently, efficiently, and enjoyably.
+------------------------------------------------------------------------
 
-## 🧠 Core Features
-### 📘 1. Intent Agent - It is the system’s “dispatcher.”
-* Concept explanation
-* Request for a quiz
-* Current or latest trends and information
-* Information lookup
-* General conversation
-* Memory or progress requests
+## 🧱 Project Structure
 
-### 📘 2. Tutor Agent - It is the “brain” of STEM Tutor. 
-* Handles student questions
-* Explains concepts at the right difficulty level
-* Provides worked examples
-* Detects prior context using persistent memory
+    aitutor/
+    │
+    ├── frontend/                     # UI micro-service
+    │   ├── ui_service.py
+    │   ├── config.py
+    │   ├── requirements.txt
+    │   ├── Dockerfile
+    │   └── static/
+    │
+    ├── tutor/                        # Core Tutor micro-service
+    │   ├── agent_entrypoint.py
+    │   ├── tutor_agent_service.py
+    │   ├── intent_classifier_agent.py
+    │   ├── subject_classifier_agent.py
+    │   ├── google_search_agent.py
+    │   ├── quizmaster_tools.py
+    │   ├── persistent_memory.py
+    │   ├── logging_plugin.py
+    │   ├── config.py
+    │   ├── requirements.txt
+    │   └── Dockerfile
+    │
+    ├── quizmaster/                   # Quiz generation micro-service
+    │   ├── quizmaster_agent_service.py
+    │   ├── config.py
+    │   ├── requirements.txt
+    │   ├── Dockerfile
+    │   └── .well-known/
+    │
+    ├── cloudbuild-aitutor.yaml       # Cloud Build pipeline for Tutor + QuizMaster
+    ├── cloudbuild-gradio.yaml        # Cloud Build pipeline for Frontend
+    ├── firebase.json                 # Optional hosting configuration
+    └── README.md                     # This file
 
-### ❓ 3. QuizMaster Agent - A Dedicated Remote A2A Service
-The Quizmaster uses a **real curated dataset of 50,000 STEM MCQs**
-* Generates quizzes (MCQs, short questions, topic-based sets)
-* Grades answers and provides feedback
-* Integrates with external quiz APIs or local generators
+Files excluded by `.gitignore` (e.g., virtualenv folders, cache
+directories, local configs, system files) are intentionally omitted from
+this structure.
 
-### 🔍 4. Google Search Agent - Controlled Web Search
-* Fetches factual information
-* Assists with real-time data for advanced topics
+------------------------------------------------------------------------
 
-### 🧩 5. Multi-Agent A2A Architecture
-* Agents interact with each other (A2A calls)
-* Tutor Agent delegates tasks (e.g., quiz creation, searching)
-* Modular and easily extendable
+## 🧠 Architecture Summary
 
-### 📚 6. Subject Classifier - It is the gatekeeper of the entire tutoring pipeline
-* Automatically detects whether the user is asking about:
-  * 📐 Mathematics
-  * 🔬 Physics
-  * 🧪 Chemistry
-  * 🧬 Biology
-    
-Helps route tasks internally to the right specialist logic
+### **Tutor Agent Service**
 
-### ⚙️ 6. Deployment-Ready
-* Cloud Run compatible
-* Dockerised environment
-* Can be adapted for Streamlit, FastAPI, or custom frontends
+Handles: - STEM concept explanations\
+- Adaptive complexity adjustment\
+- Worked examples + stepwise reasoning\
+- Student context memory\
+- Intent + subject classification\
+- Web search tool access
 
-## 📁 Project Structure
+Key modules: - `tutor_agent_service.py` - `intent_classifier_agent.py` -
+`subject_classifier_agent.py` - `persistent_memory.py` -
+`google_search_agent.py` - `quizmaster_tools.py`
 
+------------------------------------------------------------------------
+
+### **QuizMaster Service**
+
+A dedicated engine for: - Adaptive quiz generation\
+- Difficulty assessment\
+- Structured learning path generation\
+- Answer validation\
+- Performance feedback
+
+Entry point:\
+`quizmaster_agent_service.py`
+
+------------------------------------------------------------------------
+
+### **Frontend UI Service**
+
+A minimal, extendable interface layer enabling conversation and quiz
+interaction.
+
+Entry point:\
+`ui_service.py`
+
+------------------------------------------------------------------------
+
+## 🐳 Running with Docker
+
+Each micro-service builds and runs independently.
+
+### Build images
+
+``` sh
+docker build -t tutor-service ./tutor
+docker build -t quizmaster-service ./quizmaster
+docker build -t frontend-service ./frontend
 ```
 
-stemtutorai/
-├── agents/
-│   ├── intent_agent.py
-│   ├── tutor_agent.py
-│   ├── quizmaster_agent.py
-│   ├── google_search_agent.py
-│   └── subject_classifier_agent.py
-├── runtime/
-│   ├── agent_runtime.py
-│   └── session_manager.py
-├── tools/
-│   ├── google_search_tool.py
-│   └── quiz_generation_tool.py
-├── cloudrun/
-│   └── Dockerfile
-├── requirements.txt
-├── README.md
-└── LICENSE
-```
-## 🔧 Installation
+### Run services
 
-Clone the repository:
-```
-bash
-
-git clone https://github.com/ASquareDigitalUK/stemtutorai.git
-cd stemtutorai
+``` sh
+docker run -p 8001:8001 tutor-service
+docker run -p 8002:8002 quizmaster-service
+docker run -p 8000:8000 frontend-service
 ```
 
-Create a virtual environment:
-```
-bash
+------------------------------------------------------------------------
 
-python3 -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
-```
+## ☁️ Deployment (Google Cloud Build)
 
-Install dependencies:
-```
-bash
+Two deployment pipelines are included:
 
-pip install -r requirements.txt
-```
+  File                        Description
+  --------------------------- ------------------------------------------
+  `cloudbuild-aitutor.yaml`   Deploys Tutor + QuizMaster microservices
+  `cloudbuild-gradio.yaml`    Deploys Frontend UI
 
-## ▶️ Running Locally
-### Option 1 — Python App (e.g., FastAPI backend)
-```
-bash
+Trigger a build manually:
 
-uvicorn app.main:app --reload
+``` sh
+gcloud builds submit --config cloudbuild-aitutor.yaml
 ```
 
-Visit:
+------------------------------------------------------------------------
 
-👉 Open: [http://localhost:8000](http://localhost:8000/)
+## 🔧 Configuration
 
-### Option 2 — Docker
-```
-bash
+Each service uses its own `config.py` and environment variables for:
 
-docker build -t stemtutorai .
-docker run -p 8080:8080 stemtutorai
-```
+-   API keys and authentication\
+-   Model selection\
+-   Routing endpoints\
+-   Persistent memory configuration\
+-   Logging and tracing\
+-   CORS + service metadata
 
-## 🧪 Example Usage
-### Ask a Question
-```
-ardunio
+Create your environment variables using a template such as:
 
-"Explain Pythagoras theorem with a simple example."
-```
+    OPENAI_API_KEY=...
+    GOOGLE_SEARCH_API_KEY=...
+    QUIZMASTER_URL=...
+    TUTOR_URL=...
 
-### Generate a Quiz
-```
-bash
+------------------------------------------------------------------------
 
-"Give me a 5-question algebra quiz for a Year 9 student."
-```
-### Ask for Step-by-Step Solutions
-```
-bash
+## 🧪 Running Locally Without Docker
 
-"Solve 3x + 7 = 25 step-by-step.."
-```
-### Use Subject Auto-Classification
-```
-bash
-
-"What is Newton’s second law?"
-→ Automatically routed to Physics
+``` sh
+python -m tutor.tutor_agent_service
+python -m quizmaster.quizmaster_agent_service
+python -m frontend.ui_service
 ```
 
-## ☁️ Deploying to Cloud Run
+Ensure dependencies are installed for each service:
 
-1. Build the container:
-```
-bash
-
-gcloud builds submit --tag gcr.io/<PROJECT-ID>/stemtutorai
-```
-
-2. Deploy it:
-```
-bash
-
-gcloud run deploy stemtutorai --image gcr.io/<PROJECT-ID>/stemtutorai --platform managed
+``` sh
+pip install -r tutor/requirements.txt
+pip install -r quizmaster/requirements.txt
+pip install -r frontend/requirements.txt
 ```
 
-3. Enjoy your auto-scaled, serverless STEM Tutor instance 🚀
+------------------------------------------------------------------------
 
-## 🛠️ Configuration
+## 🗺️ Roadmap
 
-Create an `.env` file or use environment variables:
-```
-ini
+-   Analytics dashboard for student progress\
+-   Spaced repetition scheduling\
+-   Multimodal input (diagrams, handwriting, audio)\
+-   Lesson planning + curriculum generation\
+-   Full classroom admin tools
 
-GEMINI_API_KEY=your_key_here
-GOOGLE_SEARCH_KEY=optional
-QUESTGEN_API_KEY=optional
-```
+------------------------------------------------------------------------
+
 ## 🤝 Contributing
 
-Contributions are welcome and encouraged!
+1.  Fork the repo\
+2.  Create a feature branch (`feature/...`)\
+3.  Make your changes\
+4.  Ensure `.gitignore` exclusions remain intact\
+5.  Open a Pull Request with a clear and descriptive summary
 
-* 1. Fork the repo
-* 2. Create a feature branch (`git checkout -b feature/new-feature`)
-* 3. Commit changes
-* 4. Push to your branch
-* 5. Open a Pull Request
+------------------------------------------------------------------------
 
-Please follow repository structure and agent design patterns.
+## 📄 License
 
-## ⭐ Acknowledgements
+MIT License unless otherwise stated.
 
-* **Google Gemini AI** for LLM agent capabilities
-* **Firestore storage**
-* **Google ADK multi-agent framework**
-* Inspiration from cutting-edge AI tutoring research
+------------------------------------------------------------------------
+
+## 👨‍🏫 About
+
+STEM Tutor AI is designed to make high-quality STEM education accessible
+to all learners through intelligent, adaptive tutoring.
