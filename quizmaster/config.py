@@ -12,7 +12,7 @@ class QuizmasterSettings(BaseSettings):
 
     # Question dataset
     QUESTION_DATA_URL: str
-    QUIZMASTER_URL: str
+    QUIZMASTER_URL: str = "https://quizmaster-service-hrzbcuuvla-ew.a.run.app/"
     QUIZMASTER_PORT: int = 8080
     TEST_TOKEN: str
 

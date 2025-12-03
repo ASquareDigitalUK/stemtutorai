@@ -238,9 +238,10 @@ quizmaster_agent = LlmAgent(
     tools=[web_search, start_quiz, answer_question],
 )
 
-QUIZMASTER_PORT = settings.QUIZMASTER_PORT
+QUIZMASTER_PORT_FETCHED = settings.QUIZMASTER_PORT
+QUIZMASTER_URL_FETCHED = settings.QUIZMASTER_URL
 
-quizmaster_a2a_app = to_a2a(quizmaster_agent, port=QUIZMASTER_PORT)
+quizmaster_a2a_app = to_a2a(quizmaster_agent, port=QUIZMASTER_PORT_FETCHED, base_url=QUIZMASTER_URL_FETCHED)
 
 # -----------------------------------------------------------
 # EXTRA ROUTES (STARLETTE STYLE)
