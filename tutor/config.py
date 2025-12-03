@@ -40,7 +40,7 @@ class TutorSettings(BaseSettings):
     ADK_DEBUG: int = 1
 
     class Config:
-        env_file = ".env"
+        env_file = ".env.prod"
         extra = "ignore"
 
 
