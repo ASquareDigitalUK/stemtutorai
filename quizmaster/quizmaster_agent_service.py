@@ -23,6 +23,9 @@ from google import genai
 # Load secure settings
 from quizmaster.config import settings
 
+#For Agent Card
+from a2a.types import AgentCard
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -241,7 +244,25 @@ quizmaster_agent = LlmAgent(
 QUIZMASTER_PORT_FETCHED = settings.QUIZMASTER_PORT
 QUIZMASTER_URL_FETCHED = settings.QUIZMASTER_URL
 
-quizmaster_a2a_app = to_a2a(quizmaster_agent, port=QUIZMASTER_PORT_FETCHED, base_url=QUIZMASTER_URL_FETCHED)
+#quizmaster_a2a_app = to_a2a(quizmaster_agent, port=QUIZMASTER_PORT_FETCHED, base_url=QUIZMASTER_URL_FETCHED)
+
+my_agent_card = AgentCard(
+    name="QuizmasterAgent",
+    url="https://quizmaster-service-hrzbcuuvla-ew.a.run.app",
+    description="Stateful MCQ quiz engine with Google Search grounding.",
+    version="1.0.0",
+    capabilities={},
+    skills=[],
+    defaultInputModes=["text/plain"],
+    defaultOutputModes=["text/plain"],
+    supportsAuthenticatedExtendedCard=False,
+)
+
+quizmaster_a2a_app = to_a2a(
+    quizmaster_agent,
+    port=QUIZMASTER_PORT_FETCHED,
+    agent_card=my_agent_card
+)
 
 # -----------------------------------------------------------
 # EXTRA ROUTES (STARLETTE STYLE)
