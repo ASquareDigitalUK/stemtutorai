@@ -34,11 +34,13 @@ memory = PersistentMemory()
 
 # ---------- REMOTE QUIZMASTER AGENT ----------
 
-remote_quizmaster_agent = RemoteA2aAgent(
-    name="quizmaster_agent",
-    description="Stateful MCQ agent",
-    agent_card=QUIZMASTER_AGENT_CARD_URL,
-)
+#remote_quizmaster_agent = RemoteA2aAgent(
+#    name="quizmaster_agent",
+#    description="Stateful MCQ agent",
+#    agent_card=QUIZMASTER_AGENT_CARD_URL,
+#)
+
+remote_quizmaster_agent = RemoteA2aAgent.from_url(QUIZMASTER_AGENT_CARD_URL)
 
 # ---------- TUTOR AGENT ----------
 
