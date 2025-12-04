@@ -17,7 +17,7 @@ class QuizmasterSettings(BaseSettings):
     TEST_TOKEN: str
 
     # Models
-    QUIZMASTER_MODEL: str
+    QUIZMASTER_MODEL: str = "gemini-2.5-flash-lite"
 
     # Retry
     RETRY_ATTEMPTS: int = 3
