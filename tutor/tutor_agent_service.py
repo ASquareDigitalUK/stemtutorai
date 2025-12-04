@@ -7,7 +7,7 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent, AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.tools.agent_tool import AgentTool
 from google.genai import types
-
+import requests
 from tutor.logging_plugin import logging_plugin
 from tutor.persistent_memory import PersistentMemory
 from tutor.google_search_agent import google_search_agent
@@ -40,8 +40,16 @@ memory = PersistentMemory()
 #    agent_card=QUIZMASTER_AGENT_CARD_URL,
 #)
 
-remote_quizmaster_agent = RemoteA2aAgent.from_url(QUIZMASTER_AGENT_CARD_URL)
+# Fetch JSON from Cloud Run
+resp = requests.get(QUIZMASTER_AGENT_CARD_URL, timeout=5)
+resp.raise_for_status()
+quizmaster_card_json = resp.json()
 
+remote_quizmaster_agent = RemoteA2aAgent(
+    name="QuizmasterAgent",         # Must match the card
+    description="Stateful MCQ agent",
+    agent_card=quizmaster_card_json  # Pass JSON, not URL
+)
 # ---------- TUTOR AGENT ----------
 
 tutor_agent = LlmAgent(
