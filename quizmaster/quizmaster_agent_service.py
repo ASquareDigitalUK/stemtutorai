@@ -251,6 +251,7 @@ my_agent_card = AgentCard(
     url="https://quizmaster-service-hrzbcuuvla-ew.a.run.app",
     description="Stateful MCQ quiz engine with Google Search grounding.",
     version="1.0.0",
+    model=settings.QUIZMASTER_MODEL,  # ← REQUIRED
     capabilities={},
     skills=[],
     defaultInputModes=["text/plain"],
