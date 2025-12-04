@@ -8,6 +8,7 @@ from google.adk.agents.remote_a2a_agent import RemoteA2aAgent, AGENT_CARD_WELL_K
 from google.adk.tools.agent_tool import AgentTool
 from google.genai import types
 import requests
+import tempfile
 from tutor.logging_plugin import logging_plugin
 from tutor.persistent_memory import PersistentMemory
 from tutor.google_search_agent import google_search_agent
@@ -40,15 +41,24 @@ memory = PersistentMemory()
 #    agent_card=QUIZMASTER_AGENT_CARD_URL,
 #)
 
-# Fetch JSON from Cloud Run
+# Fetch the agent card JSON
 resp = requests.get(QUIZMASTER_AGENT_CARD_URL, timeout=5)
 resp.raise_for_status()
-quizmaster_card_json = resp.json()
+quizmaster_card_json = resp.text  # <-- keep raw JSON text
 
+# Write JSON to a temporary file
+temp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+temp.write(quizmaster_card_json.encode("utf-8"))
+temp.flush()
+temp_path = temp.name
+
+print(">>> Using agent card file:", temp_path)
+
+# Now pass the FILE PATH to RemoteA2aAgent
 remote_quizmaster_agent = RemoteA2aAgent(
-    name="QuizmasterAgent",         # Must match the card
+    name="QuizmasterAgent",
     description="Stateful MCQ agent",
-    agent_card=quizmaster_card_json  # Pass JSON, not URL
+    agent_card=temp_path,   # <-- This is allowed
 )
 # ---------- TUTOR AGENT ----------
 
